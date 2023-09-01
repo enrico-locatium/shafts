@@ -4,7 +4,25 @@ import numpy as np
 import torch
 import tensorflow as tf
 from keras import layers
-from keras.utils.layer_utils import count_params
+
+
+def count_params(weights):
+    """Count the total number of scalars composing the weights.
+
+    Args:
+        weights: An iterable containing the weights on which to compute params
+
+    Returns:
+        The total number of scalars composing the weights
+    """
+    unique_weights = {id(w): w for w in weights}.values()
+    # Ignore TrackableWeightHandlers, which will not have a shape defined.
+    unique_weights = [w for w in unique_weights if hasattr(w, "shape")]
+    weight_shapes = [w.shape.as_list() for w in unique_weights]
+    standardized_weight_shapes = [
+        [0 if w_i is None else w_i for w_i in w] for w in weight_shapes
+    ]
+    return int(sum(np.prod(p) for p in standardized_weight_shapes))
 
 
 kernel_size_ref = {100: 20, 250: 40, 500: 80, 1000: 160}
